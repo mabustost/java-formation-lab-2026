@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,23 +19,23 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-        import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 // PASO 1
 // Debes agregar la extension de Mockito
-
+@ExtendWith(MockitoExtension.class)
 class InventoryServiceTest {
 
     // PASO 2
     // Este es el MOCK
-    
+    @Mock
     private ICatalogRepository repository;
 
     // PASO 3
     // Este es la clase que vamos a testear apoyándonos de MOCK
-    
+    @InjectMocks
     private InventoryService inventoryService;
 
     private ProductDto productDto;
@@ -45,12 +46,16 @@ class InventoryServiceTest {
         productDto = new ProductDto();
         productDto.setId("1");
         productDto.setName("Producto A");
-        // ajusta setters según los campos reales de ProductDto
+        productDto.setDescription("Descripción A");
+        productDto.setUnits("UND");
+        productDto.setQuantity(10.0);
 
         product = new Product();
         product.setId("1");
         product.setName("Producto A");
-        // ajusta setters según los campos reales de Product
+        product.setDescription("Descripción A");
+        product.setUnits("UND");
+        product.setQuantity(10.0);
     }
 
     // ----------------------------------------------------------------
@@ -61,16 +66,25 @@ class InventoryServiceTest {
     class CreateTests {
 
         @Test
-        @DisplayName("Debe retornar el id del producto cuando la creación es exitosa")
-        void create_validProduct_returnsId() {
+        @DisplayName("Debe guardar el producto mapeado y retornar su id cuando la creación es exitosa")
+        void create_validProduct_savesMappedEntityAndReturnsId() {
             // PASO 4.1
             // Adicionar el paso WHEN
-            
+            when(repository.save(any(Product.class))).thenReturn(product);
 
             String result = inventoryService.create(productDto);
 
             assertEquals("1", result);
-            verify(repository, times(1)).save(any(Product.class));
+
+            // Se verifica QUÉ se guardó, no solo que se llamó al repositorio
+            ArgumentCaptor<Product> savedCaptor = ArgumentCaptor.forClass(Product.class);
+            verify(repository, times(1)).save(savedCaptor.capture());
+            Product saved = savedCaptor.getValue();
+            assertEquals("1", saved.getId());
+            assertEquals("Producto A", saved.getName());
+            assertEquals("Descripción A", saved.getDescription());
+            assertEquals("UND", saved.getUnits());
+            assertEquals(10.0, saved.getQuantity());
         }
 
         @Test
@@ -103,15 +117,18 @@ class InventoryServiceTest {
     class UpdateTests {
 
         @Test
-        @DisplayName("Debe ejecutar la actualización sin lanzar excepción cuando es exitosa")
-        void update_validProduct_completesSuccessfully() {
+        @DisplayName("Debe guardar el producto con los datos actualizados cuando la actualización es exitosa")
+        void update_validProduct_savesUpdatedEntity() {
             when(repository.save(any(Product.class))).thenReturn(product);
 
             assertDoesNotThrow(() -> inventoryService.update(productDto));
 
             // PASO 4.2
             // Implementar la sentencia verify para indicar que la actualizacion fue exitosa
-            
+            verify(repository, times(1)).save(argThat((Product saved) ->
+                    "1".equals(saved.getId())
+                            && "Producto A".equals(saved.getName())
+                            && Double.valueOf(10.0).equals(saved.getQuantity())));
         }
 
         @Test
@@ -144,15 +161,18 @@ class InventoryServiceTest {
     class GetByIdTests {
 
         @Test
-        @DisplayName("Debe retornar una lista con un elemento cuando el producto existe")
-        void getById_existingId_returnsListWithOneElement() {
+        @DisplayName("Debe retornar una lista con el producto mapeado cuando el id existe")
+        void getById_existingId_returnsListWithMappedProduct() {
             // PASO 4.3
             // Agregar el WHEN
-            
+            when(repository.findById("1")).thenReturn(Optional.of(product));
+
             List<ProductDto> result = inventoryService.getById("1");
 
             assertEquals(1, result.size());
             assertEquals("1", result.get(0).getId());
+            assertEquals("Producto A", result.get(0).getName());
+            assertEquals(10.0, result.get(0).getQuantity());
             verify(repository, times(1)).findById("1");
         }
 
