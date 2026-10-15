@@ -46,6 +46,7 @@ public class InventoryService implements IInventoryService {
             Product product = modelMapper.map(productDto, Product.class);
             repository.save(product);
         }catch (Exception e){
+            log.error(e.getMessage(), e);
             throw  new IllegalStateException("Proceso de actualizacion NO exitoso!");
         }
     }

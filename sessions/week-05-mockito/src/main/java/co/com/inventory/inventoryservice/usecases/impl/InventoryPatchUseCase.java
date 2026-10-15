@@ -6,7 +6,6 @@ import co.com.inventory.inventoryservice.usecases.IInventoryPatchUseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.awt.geom.IllegalPathStateException;
 import java.util.List;
 
 @Service
@@ -24,7 +23,7 @@ public class InventoryPatchUseCase implements IInventoryPatchUseCase {
         List<ProductDto> producto = service.getById(id);
 
         if(producto.isEmpty()){
-            throw new IllegalPathStateException("El registro no existe!");
+            throw new IllegalStateException("El registro no existe!");
         }
 
         if(productDto.getDescription() != null){

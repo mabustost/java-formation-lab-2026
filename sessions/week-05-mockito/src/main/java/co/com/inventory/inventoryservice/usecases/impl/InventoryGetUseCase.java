@@ -13,7 +13,7 @@ import java.util.Map;
 public class InventoryGetUseCase implements IInventoryGetUseCase {
 
 
-    private static IInventoryService service ;
+    private final IInventoryService service ;
 
     InventoryGetUseCase(IInventoryService service){
         this.service = service ;
