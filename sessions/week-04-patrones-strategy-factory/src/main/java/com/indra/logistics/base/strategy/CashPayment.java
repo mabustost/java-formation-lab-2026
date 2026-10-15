@@ -19,7 +19,7 @@ public class CashPayment implements PaymentStrategy {
     }
 
     @Override
-    public String confirmationMessage() {
+    public String confirmationMessage(BigDecimal amount) {
         return "Pago en efectivo registrado, sin comisión.";
     }
 }
